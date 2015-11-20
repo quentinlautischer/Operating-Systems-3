@@ -1,0 +1,21 @@
+Quentin Lautischer
+Student Number: 1295913
+Unix Id: lautisch
+LEC Section: EA1
+Instructor: Paul Lu 
+LAB Section: ED05
+TA: Luke Kumar
+
+Program Description
+###################
+
+Procnanny will monitor a list of processes and after an alloted amount of time it will terminate them.
+The given list should be provided under the file name nanny.config within the /tmp/ folder. The first line
+in the list must provide a time that the processes to be monitored for, everyline after this will be
+interpreted as a proccess to monitor.
+
+Make file specifies that the memwatch folder should be located in root.
+
+Make run to start program put config file in /tmp/
+ 
+//http://deans-avr-tutorials.googlecode.com/svn/trunk/ManagingLargeProjects/Output/ManagingLargeProjects.pdf

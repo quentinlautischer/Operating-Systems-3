@@ -1,0 +1,108 @@
+Specifications & Requirements
+#############################
+
+New config file. Changing to make procnanny more flexible but creating a more complex system.
+
+1.1. Program execuatable named procnanny.
+1.2. Program must use fork() to create children processes.
+1.3. Program must use kill() to kill processes.
+
+1.4. Program takes exactly one command-line argument that specifies the path to the config file.:
+	% procnanny /tmp/nanny.config
+
+1.5. config files contents may look like the following:
+	a.out 120
+	prog2 60
+	elm 54 
+
+	-No empty or comment lines found in file.
+	-Each line has EXACTLY two arguments.
+		--First is the EXACT name of a program needing to be monitored.  (e.g., "a.out" does not match "./a.out").
+		--Second is always an integer number that represents in seconds a time limit for the program.
+	-Only one program name on each line of input.
+	-Will not contain more that 128 program names.
+
+1.6. all PROCESSES running any of the PROGRAMS are to be monitored. Any PROCESS which lives for more than specified per-program number of seconds should be sent the kill signal (SIGKILL).
+
+1.7. If multiple processes have the same name as a line in the config file, then all processes should be monitored. (Each process will have a unique PID despite the same name).
+
+1.8. Number of seconds is define as REAL TIME, this is not the same as USER TIME. 
+
+1.9. A process with a different PID is considered a different process. 
+
+1.10. Also, a process running program gcc is not killed since gcc is not specified in the configuration file.
+
+**Processes have multiple programs. If ALL theyre programs as specified in the config file THEN AND ONLY THEN can we kill them after the elapsed time of the smallest int # secs.
+
+++ Future assignments will detect errors in config file and print an error message to STDERR and then exit. Not this one though. 
+
+1.11. When procnanny first stats is must terminate any previously existing procnannys and its children (AND confirm their termination) before continuing with its execution.
+
+1.12. logfile output is generated determined by the Unix Environment variable PROCNANNYLOGS. Its may contains relative or absolute path. 
+
+1.13. First lines of output are reporting which process(es) is/are monitored.
+	
+	[Mon Oct 26 11:27:16 MST 2015]  Info: Initializing monitoring of process 'a.out' (PID 332).
+	[Mon Oct 26 11:27:17 MST 2015]  Info: Initializing monitoring of process 'prog2' (PID 400).
+
+	Note that the first item in each line is the current time in date command format (for information regarding this format, check the ctime() function).
+
+1.14. When a process is killed, appropriate output is sent ot he logfile.
+	[Mon Oct 26 11:29:17 MST 2015] Action: PID 332 (a.out) killed after exceeding 120 seconds.
+
+1.15. Upon termination of procnanny reports the # of killed processes.
+	[Mon Oct 26 11:29:17 MST 2015] Info: Exiting. 1 process(es) killed.
+
+NOTE that any output to the logfiles must be of the format date (within square brackets), followed by "type" of message (Info:, Action:, Warning:, Error:, Debug: etc. feel free to extend this set as needed for clarity), followed by the more detailed text.
+
+
+1.16 Marks will be deducted for verbose output in the version submitted for marking. So #ifdef your debuggin logs
+
+1.17 Stylistic requirement: Students must follow the same format for their messages and diagnostics as the examples shown above.
+
+
+SIGNIFICANT NEW FUNCTIONALITY
+#############################
+
+2.1	To determine the PID of the parent procnanny process (THE TARGET OF SIGNALS) procnanny is allowed to print the following at start-up time:
+	[Mon Jan 16 11:29:17 MST 2012] Info: Parent process is PID 3443
+
+2.2 At any given time the user is allowed to change the configuration file to ADD, REMOVE, OR CHANGE any line in the file. 
+	- The user is ALLOWED to send a HANGUP signal (SIGHUP) to the parent procnanny process which forces procnanny to re-read the config file (WHICH WILL HAVE THE SAME NAME).
+	- THEN the parent procnanny should print to both STDOUT and the Logfile the following message.
+		[Mon Jan 16 11:29:17 MST 2012] Info: Caught SIGHUP. Configuration file 'nanny.config' re-read.
+	- Any process currently being monitored will continue to be monitored.
+	++ FUTURE that PROGRAM name will no longer be monitored.
+
+2.3 The user can send an interrupt signal (SIGINT) to the parent procnanny process that forces it to close any open files that it might have, kill each of its children (even if they are currenly monitoring a process), and free up ALL resources (e.g, memory, signals from children that have exited).
+	- Basically a clean exit from the procnanny process.
+	- After all the cleaning is complete print to BOTH STDOUT and logfile the kill numbers 
+		[Mon Jan 16 11:29:17 MST 2012] Info: Caught SIGINT. Exiting cleanly.  1 process(es) killed.
+
+2.4 Continue Monitoring with efficient use of child processes.
+	-Every 5 seconds, pocnanny check all processes on the system that belong to the USER running the program. (Do no hardcode user, grab from system).
+	-If one of these processes is running a monitored program, as specified by the config file, then procnanny will tell a child to process to continue overseeing the monitored process.
+	-The communication of the info btw/ child and process should be done with Unix pipes.
+
+	-Child should not exit upon completion of monitoring (killing of process).
+	-Parent should never fork a new child if an existing child is just waiting for another task.
+	-Child only exists if the parent has received a SIGINT singal and is telling the child to to exit (Done by sending a PID value of -1)
+
+	Child Flow: 
+		1. Instructed to monitor a PID for int secs of REAL time
+		2. Sleep(Specified Time)
+		3. Check system for the process at PID.
+			4if. Kill(PID, SIGKILL)
+			5if. Print output
+		6. Wait for more instructions.
+
+
+ASSUMTIONS:
+#######################
+procnanny now runs infinitly.
+**Processes have multiple programs. If ALL theyre programs as specified in the config file THEN AND ONLY THEN can we kill them after the elapsed time of the smallest int # secs.
+
+
+REQS:
+#######################
+2. Pipe to send inputs to both STDOUT and a logfile.
