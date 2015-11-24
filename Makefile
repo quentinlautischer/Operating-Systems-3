@@ -25,8 +25,8 @@ $(TARGET):
 clean:
 	$(RM) bin/$(TARGET)
 
-runServer:
+runS:
 	bin/procnanny.server src/tmp/a2-simple-test.config
 
-runClient:
-	bin/procnanny.client 
+runC:
+	bin/procnanny.client xyz 1023

@@ -36,6 +36,8 @@ MonChild *monChild_head;
 MonChild *iterCurr;
 BoredChild *iterCurrr; 
 
+void clientNannyPrint(char* s);
+
 void clientNannyFlow(void){
 	msgData = (char*)malloc(1024 * sizeof(char));
 	psLine = (char*)malloc(1024 * sizeof(char));
@@ -388,5 +390,15 @@ void killOldProcnannys(){
 			}
 		fclose(file);
 		}
+}
+
+void clientNannyPrint(char* s){
+	if(DEBUGLOGGINFLAG){
+		fprintf(stdout,"%s\n",s);
+	}
+}
+
+void clientConnectToServer(char* nodeName, int portNum){
+
 }
 

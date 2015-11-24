@@ -34,9 +34,7 @@ int main(int argc, char* argv[]){
 		strcpy(configFileName, argv[1]);
 	
 		clerkNannySetup();
-
-		while(1){};
-
+		clerkNannyMainLoop();
 	
 	}
 

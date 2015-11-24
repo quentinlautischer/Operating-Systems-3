@@ -23,5 +23,10 @@ void clientNannyForkProcMon(void);
 void unlinkFIFOandKillChildren(void);
 void killOldProcnannys(void);
 
+void clientNannyPrint(char* s);
+void clientConnectToServer(char* nodeName, int portNum);
+
+
+#define DEBUGLOGGINFLAG 1
 
 #endif 

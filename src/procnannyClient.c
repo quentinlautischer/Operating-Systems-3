@@ -20,7 +20,9 @@
 void teardown(void);
 void signalCallbackHandler(int signum);
 
-char *configFileName;
+char *nodeName;
+int portNum;
+
 int killedProcesses;
 
 char *msgData;
@@ -31,17 +33,24 @@ int main(int argc, char* argv[]){
 	signal(SIGINT, signalCallbackHandler);
 	signal(SIGALRM, clientNannyCheckForProcesses);
 
-	if ( argc == 2 ){ /* Ensure only one argument provided */
-		configFileName = malloc(strlen(argv[1]) + 1);
-		strcpy(configFileName, argv[1]);
+	clientNannyPrint("Startup");
 
-		clientNannyFlow(); //Main Loop
+	if ( argc == 3 ){ /* Ensure only one argument provided */
+		nodeName = malloc(strlen(argv[1]) + 1);
+		strcpy(nodeName, argv[1]);
+		portNum = strtol(argv[2], NULL, 10);
+
+		clientConnectToServer(nodeName, portNum):
+
+		// clientNannyFlow(); //Main Loop
 
 		while(1){};
 
 	
+	} else {
+		clientNannyPrint("Error Startup");
 	}
-
+	clientNannyPrint("Client Exit Startup");
 	return EXIT_SUCCESS;
 }
 

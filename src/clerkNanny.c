@@ -25,6 +25,14 @@ typedef struct ConfigExtractedData item;
 item * head;
 item * curr;
 
+
+void clerkNannyMainLoop(void){
+	clerkNannyParseConfigFile(SIGHUP);
+	while(1){
+
+	};
+}
+
 void clerkNannySetup(void){
 	const char* logDir = getenv("PROCNANNYLOGS");
 	fileLine = (char*)malloc(1024 * sizeof(char));
@@ -91,7 +99,7 @@ void clerkNannyParseConfigFile(int signum){
 		for (; i < 128; i++){
 			if (fgets(fileLine, 1024, configFile)){
 				strtok(fileLine, "\n");
-				// clerkNannyPrint(fileLine, DEBUG);
+				clerkNannyPrint(fileLine, DEBUG);
 
 				char seps[] = " ";
 				char *token = strtok( fileLine, seps );
