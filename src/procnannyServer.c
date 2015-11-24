@@ -9,13 +9,9 @@
 #include <string.h>
 #include <sys/types.h>
 
-
-#include "childNanny.h"
 #include "clerkNanny.h"
-#include "clientNanny.h"
 
 #include "memwatch.h"
-#include "vector.h"
 
 #endif
 
@@ -32,16 +28,12 @@ int main(int argc, char* argv[]){
 
 	signal(SIGINT, signalCallbackHandler);
 	signal(SIGHUP, clerkNannyParseConfigFile);
-	signal(SIGALRM, clientNannyCheckForProcesses);
 
 	if ( argc == 2 ){ /* Ensure only one argument provided */
 		configFileName = malloc(strlen(argv[1]) + 1);
 		strcpy(configFileName, argv[1]);
 	
 		clerkNannySetup();
-	
-
-		clientNannyFlow(); //Main Loop
 
 		while(1){};
 
@@ -53,7 +45,6 @@ int main(int argc, char* argv[]){
 
 void teardown(void){
 	clerkNannyTeardown();
-	clientNannyTeardown();
 }
 
 void signalCallbackHandler(int signum){

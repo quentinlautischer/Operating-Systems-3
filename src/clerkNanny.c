@@ -74,7 +74,7 @@ void clerkNannyReceiveData(char* s, int lt){
 }
 
 static void clerkNannySendDataToClient(char* s){
-	clientNannyReceiveData(s);
+	// clientNannyReceiveData(s);
 }
 
 void clerkNannyParseConfigFile(int signum){
@@ -115,7 +115,7 @@ void clerkNannyParseConfigFile(int signum){
 	// clerkNannySerializeConfigData();
 	clerkNannySendDataToClient("");
 	sighupFlag = 1;
-	clientNannyCheckForProcesses(SIGALRM);
+	// clientNannyCheckForProcesses(SIGALRM);
 }
 
 static void clerkNannyPrint(char* s, int lt){

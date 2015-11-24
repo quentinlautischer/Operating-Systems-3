@@ -73,8 +73,6 @@ void clientNannyFlow(void){
 	clientNannySendDataToClerk(msgData, LOGFILE);
 
 	killOldProcnannys();
-
-	clerkNannyParseConfigFile(SIGHUP);//Should trigger its inital Check of processes
 }
 
 void clientNannyLoop(void){}
@@ -132,7 +130,7 @@ void clientNannyTeardown(void){
 }
 
 static void clientNannySendDataToClerk(char* s, int lt){
-	clerkNannyReceiveData(s, lt);
+	// clerkNannyReceiveData(s, lt);
 }
 
 static void clientNannySendDataToChild(void){

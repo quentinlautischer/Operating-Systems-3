@@ -6,19 +6,27 @@ INCLUDES = -I memwatch-2.71/ memwatch-2.71/memwatch.c  -I src/libs/ src/libs/lin
 
 TARGET = procnanny
 
-SRC = src/$(TARGET).c		\
+TARGET_CLIENT = procnanny.client
+TARGET_SERVER = procnanny.server
+
+SRC_CLIENT = src/procnannyClient.c		\
 		src/childNanny.c 	\
-		src/clerkNanny.c 	\
 		src/clientNanny.c 	\
+
+SRC_SERVER = src/procnannyServer.c		\
+		src/clerkNanny.c 	\
 
 all: $(TARGET)
 
 $(TARGET): 
-	$(CC) $(CFLAGS) $(MEMFLAGS) $(INCLUDES) -o bin/$(TARGET) $(SRC) 
-
+	$(CC) $(CFLAGS) $(MEMFLAGS) $(INCLUDES) -o bin/$(TARGET_CLIENT) $(SRC_CLIENT) 
+	$(CC) $(CFLAGS) $(MEMFLAGS) $(INCLUDES) -o bin/$(TARGET_SERVER) $(SRC_SERVER) 
 
 clean:
 	$(RM) bin/$(TARGET)
 
-run:
-	bin/procnanny src/tmp/a2-simple-test.config
+runServer:
+	bin/procnanny.server src/tmp/a2-simple-test.config
+
+runClient:
+	bin/procnanny.client 
