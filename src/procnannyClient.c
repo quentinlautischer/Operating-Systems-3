@@ -40,12 +40,12 @@ int main(int argc, char* argv[]){
 		strcpy(nodeName, argv[1]);
 		portNum = strtol(argv[2], NULL, 10);
 
-		clientConnectToServer(nodeName, portNum):
+		clientInit();
+		clientConnectToServer(nodeName, portNum);
 
 		// clientNannyFlow(); //Main Loop
 
-		while(1){};
-
+		clientNannyLoop();
 	
 	} else {
 		clientNannyPrint("Error Startup");

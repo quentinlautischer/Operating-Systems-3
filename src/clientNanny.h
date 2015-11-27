@@ -9,6 +9,13 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <stdio.h>
+
+
 #include "memwatch.h"
 #include "monLL.h"
 #include "linkedList.h"
@@ -25,8 +32,14 @@ void killOldProcnannys(void);
 
 void clientNannyPrint(char* s);
 void clientConnectToServer(char* nodeName, int portNum);
+void clientInit(void);
+void clientNannyLoop(void);
+
+void receiveServerData(void);
 
 
 #define DEBUGLOGGINFLAG 1
+#define MY_PORT  60333
+#define SERVNAME "localhost"
 
 #endif 

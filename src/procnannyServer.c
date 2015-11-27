@@ -9,6 +9,8 @@
 #include <string.h>
 #include <sys/types.h>
 
+
+#include "select_servermod.h"
 #include "clerkNanny.h"
 
 #include "memwatch.h"
@@ -17,6 +19,7 @@
 
 void teardown(void);
 void signalCallbackHandler(int signum);
+void signalNewConfig(int signum);
 
 char *configFileName;
 int killedProcesses;
@@ -27,15 +30,16 @@ pid_t parent_pid;
 int main(int argc, char* argv[]){
 
 	signal(SIGINT, signalCallbackHandler);
-	signal(SIGHUP, clerkNannyParseConfigFile);
+	signal(SIGHUP, signalNewConfig);
 
-	if ( argc == 2 ){ /* Ensure only one argument provided */
-		configFileName = malloc(strlen(argv[1]) + 1);
-		strcpy(configFileName, argv[1]);
+	if ( argc == 3 ){ /* Ensure only one argument provided */
+		configFileName = malloc(strlen(argv[2]) + 1);
+		strcpy(configFileName, argv[2]);
 	
 		clerkNannySetup();
-		clerkNannyMainLoop();
-	
+		clerkNannyParseConfigFile();
+		serverBoot(argc, argv);
+
 	}
 
 	return EXIT_SUCCESS;
@@ -50,10 +54,15 @@ void signalCallbackHandler(int signum){
 		sprintf(msgData, "Info: Caught SIGINT. Exiting cleanly. %d process(es) killed.", killedProcesses);
 		clerkNannyReceiveData(msgData, BOTH);	
 	}
+	serverTeardown();
 	teardown();
 	exit(signum);
 }
 
+void signalNewConfig(int signum){
+	clerkNannyParseConfigFile();
+	clerkNannySendNewConfigToClients();
+}
 
 
 

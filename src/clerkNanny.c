@@ -1,41 +1,21 @@
 #include "clerkNanny.h"
+#include "select_servermod.h"
 
 static void clerkNannySendDataToClient(char *s);
-static void clerkNannyPrint(char* s, int logType);
 static void setTimeHeader(char *currentTime);
 
-
-char *configFileName;
-char currentTime[100];
-char *fileLine;
-
-FILE* logFile;
-FILE* configFile;
-
-int sighupFlag = 0;
-
-struct ConfigExtractedData {
-	char name[1024];
-	char secs[1024];
-	struct ConfigExtractedData *next;
-};
-
-typedef struct ConfigExtractedData item;
-
-item * head;
-item * curr;
-
-
 void clerkNannyMainLoop(void){
-	clerkNannyParseConfigFile(SIGHUP);
+	clerkNannyParseConfigFile();
 	while(1){
 
 	};
+	clerkNannySendDataToClient("");
 }
 
 void clerkNannySetup(void){
 	const char* logDir = getenv("PROCNANNYLOGS");
 	fileLine = (char*)malloc(1024 * sizeof(char));
+	msgData = (char*)malloc(1024 * sizeof(char));
 	head = NULL;
 
 	logFile = fopen(logDir, "w+");
@@ -70,6 +50,7 @@ void clerkNannySerializeConfigData(void){
 void clerkNannyTeardown(void){
 	cleanLinkedList();
 
+	free(msgData);
 	free(configFileName);
 	free(fileLine);
 	if(logFile != NULL){
@@ -85,7 +66,7 @@ static void clerkNannySendDataToClient(char* s){
 	// clientNannyReceiveData(s);
 }
 
-void clerkNannyParseConfigFile(int signum){
+void clerkNannyParseConfigFile(void){
 	clerkNannyPrint(configFileName, DEBUG);
 	configFile = fopen( configFileName, "r" );
 	if ( configFile == 0 ){
@@ -120,13 +101,14 @@ void clerkNannyParseConfigFile(int signum){
 		}
 		fclose(configFile);			
 	}
-	// clerkNannySerializeConfigData();
-	clerkNannySendDataToClient("");
-	sighupFlag = 1;
-	// clientNannyCheckForProcesses(SIGALRM);
+	// sighupFlag = 1;
 }
 
-static void clerkNannyPrint(char* s, int lt){
+void clerkNannySendNewConfigToClients(void){
+	serverWriteNewConfigToClients();
+}
+
+void clerkNannyPrint(char* s, int lt){
 	setTimeHeader(currentTime);
 
 	switch (lt){

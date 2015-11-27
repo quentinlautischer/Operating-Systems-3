@@ -14,19 +14,24 @@ SRC_CLIENT = src/procnannyClient.c		\
 		src/clientNanny.c 	\
 
 SRC_SERVER = src/procnannyServer.c		\
+		src/select_servermod.c \
 		src/clerkNanny.c 	\
+
+# SRC_SERVER = src/select_servermod.c \
+# 		src/clerkNanny.c 	\
 
 all: $(TARGET)
 
 $(TARGET): 
 	$(CC) $(CFLAGS) $(MEMFLAGS) $(INCLUDES) -o bin/$(TARGET_CLIENT) $(SRC_CLIENT) 
-	$(CC) $(CFLAGS) $(MEMFLAGS) $(INCLUDES) -o bin/$(TARGET_SERVER) $(SRC_SERVER) 
+	$(CC) $(CFLAGS) $(MEMFLAGS) $(INCLUDES) -o bin/$(TARGET_SERVER) $(SRC_SERVER)
 
 clean:
 	$(RM) bin/$(TARGET)
 
 runS:
-	bin/procnanny.server src/tmp/a2-simple-test.config
+	#bin/procnanny.server src/tmp/a2-simple-test.config
+	bin/procnanny.server 60333 src/tmp/a2-simple-test.config
 
 runC:
-	bin/procnanny.client xyz 1023
+	bin/procnanny.client xyz 60333

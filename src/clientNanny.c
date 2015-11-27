@@ -3,6 +3,7 @@
 static void clientNannySendDataToClerk(char* s, int lt);
 static void clientNannySendDataToChild(void);
 
+char socketMsgData[256];
 char *msgData;
 char *psLine;
 char *childPID;
@@ -15,30 +16,37 @@ char line[MAXLINE];
 int fd = 0;
 char *myfifo;
 
-int sighupFlag;
+// int sighupFlag;
 
 FILE* fpin;
 
-struct ConfigExtractedData {
-	char name[1024];
-	char secs[1024];
-	struct ConfigExtractedData *next;
-};
+// struct ConfigExtractedData {
+// 	char name[1024];
+// 	char secs[1024];
+// 	struct ConfigExtractedData *next;
+// };
 
-typedef struct ConfigExtractedData item;
+// typedef struct ConfigExtractedData item;
 
-item * head;
-item * curr;
+// item * head;
+// item * curr;
 
 BoredChild *boredChild_head;
 MonChild *monChild_head;
 
 MonChild *iterCurr;
-BoredChild *iterCurrr; 
+BoredChild *iterCurrr;
 
-void clientNannyPrint(char* s);
+int	s, number;
 
-void clientNannyFlow(void){
+struct	sockaddr_in	server;
+
+struct	hostent		*host; 
+
+
+
+
+void clientInit(void){
 	msgData = (char*)malloc(1024 * sizeof(char));
 	psLine = (char*)malloc(1024 * sizeof(char));
 	childPID = (char*)malloc(1024 * sizeof(char));
@@ -54,6 +62,10 @@ void clientNannyFlow(void){
 	myfifo = (char*)malloc(1024 * sizeof(char));
 
 	extern FILE *popen();
+}
+
+
+void clientNannyFlow(void){
 
 	sprintf(msgData,"Info: Parent process is PID %d", getpid());
 	clientNannySendDataToClerk(msgData, LOGFILE);
@@ -77,7 +89,11 @@ void clientNannyFlow(void){
 	killOldProcnannys();
 }
 
-void clientNannyLoop(void){}
+void clientNannyLoop(void){
+	while(1){
+		receiveServerData();	
+	}
+}
 
 void unlinkFIFOandKillChildren(void){
 	iterCurr = monChild_head;
@@ -114,6 +130,7 @@ void unlinkFIFOandKillChildren(void){
 }
 
 void clientNannyTeardown(void){
+	close(s);
 	unlinkFIFOandKillChildren();
 	monLL_clear(&monChild_head);
 	stack_clear(&boredChild_head);
@@ -193,7 +210,7 @@ void clientNannyCheckForProcesses(int signum){
 					} //ALREADY BEING MONITORED. DO NOTHING.
 				}
 			}
-			if (!whileFixFlag && sighupFlag){
+			if (!whileFixFlag){// && sighupFlag
 				//clientNannySendDataToClerk(psLine, DEBUG);
 				sprintf(msgData, "Info: No '%s' processes found.", curr->name);
 				clientNannySendDataToClerk(msgData, BOTH);
@@ -204,7 +221,7 @@ void clientNannyCheckForProcesses(int signum){
 		}
 		
 	}
-	sighupFlag = 0;	
+	// sighupFlag = 0;	
 	iterCurr = monChild_head;
 	while(iterCurr != NULL){
 		sprintf(msgData, "ITERATING CHILD %d MONS %d",iterCurr->childPID, iterCurr->monPID);
@@ -399,6 +416,127 @@ void clientNannyPrint(char* s){
 }
 
 void clientConnectToServer(char* nodeName, int portNum){
+	// sprintf(msgData, "Attemping to connect to '%s' server on port %i", nodeName, portNum);
+	sprintf(msgData, "Attemping to connect to '%s' server on port %i", SERVNAME, MY_PORT);
+	clientNannyPrint(msgData);
 
+	/* Put here the name of the sun on which the server is executed */
+	host = gethostbyname (SERVNAME);
+
+	if (host == NULL) {
+		perror ("Client: cannot get host description");
+		clientNannyTeardown();
+	}
+
+	// while (1) {
+
+		s = socket (AF_INET, SOCK_STREAM, 0);
+
+		if (s < 0) {
+			perror ("Client: cannot open socket");
+			clientNannyTeardown();
+		}
+
+		bzero (&server, sizeof (server));
+		bcopy (host->h_addr, & (server.sin_addr), host->h_length);
+		server.sin_family = host->h_addrtype;
+		server.sin_port = htons (MY_PORT);
+
+		if (connect (s, (struct sockaddr*) & server, sizeof (server))) {
+			perror ("Client: cannot connect to server");
+			clientNannyTeardown();
+		} else {
+			sprintf(msgData, "%s", "Connected");
+			clientNannyPrint(msgData);
+
+			sprintf(socketMsgData, "%s", "Init empty empty");
+
+			sprintf(msgData, "Sending msg: %s size: %lu", socketMsgData, sizeof(socketMsgData));
+			clientNannyPrint(msgData);
+
+			if (write (s, &socketMsgData, sizeof(socketMsgData)) < 1){
+				sprintf(msgData, "%s", "Error writting to socket ");
+				clientNannyPrint(msgData);			
+			}
+
+			receiveServerData();
+		}
+}
+
+void receiveServerData(void){
+	int i;
+	char* header;
+	char* name;
+	char* secs;
+
+
+	i = read (s, msgData, 256);
+	clientNannyPrint("DID A READ ");
+	if (i == 0) {
+		clientNannyPrint("Closing Connection");
+		/* 0 byte read means the connection got closed */
+		close(s);
+		return;
+	}
+	if (i == -1) {
+		clientNannyPrint("Error Reading");
+		// if (errno != EAGAIN) {
+		// 	/* read failed */
+		// 	err(1, "read failed!\n");
+		// 	close(s);
+		// }
+		/*
+		 * note if EAGAIN, we just return, and let our caller
+		 * decide to call us again when socket is readable
+		 */
+		return;
+	}
+
+	/* Real read lets go */
+	header = strtok (msgData," ");
+	if(!strcmp("newList", header)){
+		do {
+			read (s, msgData, 256);
+			header = strtok (msgData," "); //First line is Header
+			clientNannyPrint(header);
+			name = strtok (NULL, " "); //Second is name
+			clientNannyPrint(name);
+			secs = strtok (NULL, " "); //Third is seconds
+			clientNannyPrint(secs);
+		} while (!strcmp(header, "listItem"));
+		sprintf(socketMsgData, "%s", "Got Your Data");
+		clientNannyPrint("Sending Akn");
+		if (write (s, &socketMsgData, sizeof(socketMsgData)) < 1){
+			sprintf(msgData, "%s", "Error writting to socket ");
+			clientNannyPrint(msgData);			
+		}
+
+		sprintf(socketMsgData, "%s", "Msg Hi There");
+		clientNannyPrint("Sending Msg");
+		if (write (s, &socketMsgData, sizeof(socketMsgData)) < 1){
+			sprintf(msgData, "%s", "Error writting to socket ");
+			clientNannyPrint(msgData);			
+		}
+
+		sprintf(socketMsgData, "%s", "Msg Hi There");
+		clientNannyPrint("Sending Msg");
+		if (write (s, &socketMsgData, sizeof(socketMsgData)) < 1){
+			sprintf(msgData, "%s", "Error writting to socket ");
+			clientNannyPrint(msgData);			
+		}
+
+		sprintf(socketMsgData, "%s", "Msg Hi There");
+		clientNannyPrint("Sending Msg");
+		if (write (s, &socketMsgData, sizeof(socketMsgData)) < 1){
+			sprintf(msgData, "%s", "Error writting to socket ");
+			clientNannyPrint(msgData);			
+		}
+
+	}
+	if(!strcmp("Die", header)){
+		clientNannyPrint("I SHOULD KILL MYSELF");
+		exit(1);
+		clientNannyTeardown();
+	}
 }
 
